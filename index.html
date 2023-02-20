@@ -1,0 +1,21 @@
+<title>rgb1k!</title>
+<meta name=viewport content=width=device-width,initial-scale=1.0>
+<style>*{font-family:Arial;border-radius:9pt}h1{cursor:pointer;height:50%;background-color:black}input{width:32%}p>p{padding:1%}</style>
+<h1></h1>
+<script>
+for(i of [0,1,2])(b=document.body).innerHTML+=`<input type=range max=255 style=accent-color:hsl(${i*100},99%,70%);>`
+b.innerHTML+="<p></p>"
+c=_=>[(r=_=>Math.random()*256|0)(),r(),r()]
+b.children[0].onclick=_=>{
+(d=(h=b.children)[i=E=0]).C||=[0,0,0]
+t=[]
+u=[]
+for(x of h)E+=!isNaN(u[i]=+x.value)*Math.abs(t[i]=d.C[i]-x.value|0)/765,i+=!!x.value
+t.pop()
+u.pop()
+P=Math.pow(1-E,3)*100|0
+S=h[h.length-1]
+S.innerHTML=`<p style="background-image:linear-gradient(90deg,hsl(${P},99%,80%) ${P}%,#fff ${P}%,#fff 90%,rgb(${d.C}) 90%,rgb(${d.C}) 95%,rgb(${u}) 95%);">${P} points, ${t}</p>`+S.innerHTML
+d.style.backgroundColor=`rgb(${d.C=c()})`
+}
+</script>
