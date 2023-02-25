@@ -1,21 +1,332 @@
-<title>rgb1k!</title>
-<meta name=viewport content=width=device-width,initial-scale=1.0>
-<style>*{font-family:Arial;border-radius:9pt}h1{cursor:pointer;height:50%;background-color:black}input{width:32%}p>p{padding:1%}</style>
-<h1></h1>
-<script>
-for(i of [0,1,2])(b=document.body).innerHTML+=`<input type=range max=255 style=accent-color:hsl(${i*100},99%,70%);>`
-b.innerHTML+="<p></p>"
-c=_=>[(r=_=>Math.random()*256|0)(),r(),r()]
-b.children[0].onclick=_=>{
-(d=(h=b.children)[i=E=0]).C||=[0,0,0]
-t=[]
-u=[]
-for(x of h)E+=!isNaN(u[i]=+x.value)*Math.abs(t[i]=d.C[i]-x.value|0)/765,i+=!!x.value
-t.pop()
-u.pop()
-P=Math.pow(1-E,3)*100|0
-S=h[h.length-1]
-S.innerHTML=`<p style="background-image:linear-gradient(90deg,hsl(${P},99%,80%) ${P}%,#fff ${P}%,#fff 90%,rgb(${d.C}) 90%,rgb(${d.C}) 95%,rgb(${u}) 95%);">${P} points, ${t}</p>`+S.innerHTML
-d.style.backgroundColor=`rgb(${d.C=c()})`
-}
-</script>
+<!DOCTYPE html>
+<html lang="en-us">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1.0">
+		<title>rgb1k! neo</title>
+		<style type="text/css">
+			* {
+				font-family: Arial;
+				border-radius: 1em;
+				transition-duration: 200ms;
+			}
+
+			@keyframes score-show {
+				0% {
+					opacity: 0;
+					translate: -2em 0;
+					margin-left: -2em;
+				}
+
+				100% {
+					opacity: 1;
+					translate: 0 0;
+					margin-left: 0;
+				}
+			}
+
+			#container {
+				position: absolute;
+				margin: auto;
+
+				top: 0;
+				bottom: 0;
+				left: 0;
+				right: 0;
+
+				max-width: 30em;
+
+				display: flex;
+				flex-direction: column;
+			}
+
+			#container>div {
+				flex-grow: 1;
+				flex-direction: row;
+				display: flex;
+			}
+
+			#container>div>div {
+				margin: 0.5em;
+				padding: 0.5em;
+				flex-grow: 1;
+
+				display: flex;
+			}
+
+			#container>div>h1 {
+				padding: 0.5em;
+				margin: 0;
+			}
+
+			#guess-color {
+				flex-grow: 2 !important;
+				/*background-color: red;*/
+
+				display: flex;
+
+				border: 4pt dashed #ccc;
+			}
+
+			#user-color {
+				flex-grow: 1 !important;
+				background: linear-gradient(to right, rgb(127, 0, 0) 33%, rgb(0, 127, 0) 33%, rgb(0, 127, 0) 66%, rgb(0, 0, 127) 66%);
+			}
+
+			#prev-guess-color {
+				/*background: green;*/
+				flex-grow: 1;
+
+				border: 4pt dashed #ccc;
+			}
+
+			#score {
+				color: white;
+
+				background: hsl(0 100% 50%);
+				border-radius: 0.5em;
+
+				display: inline;
+
+				margin: 0;
+				margin-left: 0.5em;
+				padding: 0.2em;
+			}
+
+			#guess-number {
+				padding: 0.2em;
+			}
+
+			#game-state {
+				flex-grow: 0 !important;
+			}
+
+			#game-state > h1 {
+				display: flex;
+			}
+
+			#prev-scores {
+				flex-wrap: scroll;
+				flex-grow: 0;
+
+				overflow: hidden;
+				overflow-x: auto;
+
+				border-radius: 0;
+			}
+
+			#prev-scores>div {
+				color: white;
+
+				animation: score-show 0.5s ease;
+
+				background: black;
+				border-radius: 0.5em;
+
+				display: inline;
+
+				margin: 0;
+				margin-right: 0.5em;
+				padding: 0.2em;
+			}
+
+			div #r { 
+				background: linear-gradient(to top, #f00 50%, #fff 50%);
+				border: 4pt solid #f00; 
+			}
+			div #r > h1 { color: #0ff; }
+
+			div #g { 
+				background: linear-gradient(to top, #0f0 50%, #fff 50%); 
+				border: 4pt solid #0f0; 
+			}
+			div #g > h1 { color: #f0f; }
+
+			div #b { 
+				background: linear-gradient(to top, #00f 50%, #fff 50%); 
+				border: 4pt solid #00f; 
+			}
+			div #b > h1 { color: #ff0; }
+
+			.slider {
+				position: relative;
+				padding: 0 !important;
+			}
+
+			.slider > h1 {
+				margin: 0;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				translate: -50% -50%;
+
+				mix-blend-mode: difference;
+				pointer-events: none;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="container">
+			<div>
+				<div style="flex-direction: column; padding: 0; gap: 0.5em;">
+					<div id="prev-guess-color"></div>
+					<div id="user-color"></div>
+				</div>
+				<div id="guess-color"></div>
+			</div>
+			<div id="game-state">
+				<h1 style="display: flex-basis;">
+					<div id="guess-number">1/3</div>
+					<div id="score">0%</div>
+				</h1>
+				<h1 id="prev-scores">
+				</h1>
+			</div>
+			<div style="flex-grow: 2;">
+				<div id="r" class="slider">
+					<h1>127</h1>
+				</div>
+				
+				<div id="g" class="slider">
+					<h1>127</h1>
+				</div>
+
+				<div id="b" class="slider">
+					<h1>127</h1>
+				</div>
+			</div>
+		</div>
+		<div class="prev-guess"></div>
+	</body>
+	<script type="text/javascript">
+		const game = {
+			userColor: [127, 127, 127],
+			guessNumber: 0,
+
+			prevGuessColor: null,
+			guessColor: null,
+
+			totalRoundScore: 0,
+
+			eUserColor: document.getElementById("user-color"),
+			eGuessNumber: document.getElementById("guess-number"),
+
+			ePrevGuessColor: document.getElementById("prev-guess-color"),
+			eGuessColor: document.getElementById("guess-color"),
+			eScore: document.getElementById("score"),
+			ePrevScores: document.getElementById("prev-scores"),
+
+			randColor() {
+				return [
+					Math.random() * 0xff | 0,
+					Math.random() * 0xff | 0,
+					Math.random() * 0xff | 0
+				]
+			},
+
+			submit() {
+				this.prevGuessColor = [...this.userColor];
+
+				let roundScore = 0;
+
+				for (let i = 0; i < 3; i++) {
+					roundScore += Math.abs(this.userColor[i] - this.guessColor[i]) / 765;
+				}
+
+				roundScore = Math.pow(1 - roundScore, 3.0);
+
+				console.log(roundScore);
+
+				this.totalRoundScore += roundScore;
+
+				if (++this.guessNumber == 3) { // game over
+
+					const prevScoreDiv = document.createElement("div");
+					prevScoreDiv.innerText = this.eScore.innerText;
+					prevScoreDiv.style.background = `linear-gradient(to right, rgb(${this.prevGuessColor}) 50%, rgb(${this.guessColor}) 50%)`;
+
+					this.ePrevScores.prepend(prevScoreDiv);
+
+					this.guessColor = this.randColor();
+
+					this.guessNumber = 0;
+					this.totalRoundScore = 0;
+
+					this.prevGuessColor = null;
+
+					console.log("game over!");
+				}
+
+				this.update();
+			},
+
+			update() {
+				const [r, g, b] = this.userColor;
+				this.eUserColor.style.background = `linear-gradient(to right, rgb(${r}, 0, 0) 33%, rgb(0, ${g}, 0) 33%, rgb(0, ${g}, 0) 66%, rgb(0, 0, ${b}) 66%)`;
+
+				const rgbPrevGuessColor = this.prevGuessColor && `rgb(${this.prevGuessColor})`;
+
+				this.ePrevGuessColor.style.background = rgbPrevGuessColor || "none";
+				this.ePrevGuessColor.style.borderColor = rgbPrevGuessColor || "#ccc";
+
+				const rgbGuessColor = this.guessColor && `rgb(${this.guessColor})`;
+
+				this.eGuessColor.style.background = rgbGuessColor || "none";
+				this.eGuessColor.style.borderColor = rgbGuessColor || "#ccc";
+
+				this.eGuessNumber.innerText = `${this.guessNumber + 1}/3`;
+
+				const percentScore = this.totalRoundScore * 100 / this.guessNumber;
+
+				this.eScore.innerText = `${percentScore | 0}%`;
+				this.eScore.style.background = `hsl(${percentScore | 0} 90% 50%)`;
+			},
+		};
+
+		game.guessColor = game.randColor();
+		game.eGuessColor.addEventListener("click", _ => {
+			game.submit();
+		});
+
+		for (const s of document.querySelectorAll(".slider")) {
+			const [v] = s.children;
+
+			const update = y => {
+				s.fracValue = Math.max(Math.min(1 - y / s.offsetHeight, 1.0), 0.0);
+					s.value = s.fracValue * 0xff | 0;
+
+					const color = {
+						"r": "#f00",
+						"g": "#0f0",
+						"b": "#00f"
+					}[s.id];
+					const channel = "rgb".indexOf(s.id);
+					const percent = s.fracValue * 100;
+
+					s.style.background = `linear-gradient(to top, ${color} ${percent}%, #fff ${percent}%)`;
+					game.userColor[channel] = v.innerText = s.value;
+					game.update();
+			}
+
+			const mouseHandler = e => {
+				if (e.buttons & 1) update(e.offsetY);
+			}
+
+			const touchHandler = e => {
+				if (e.touches[0]) {
+					update(e.touches[0].clientY - s.getBoundingClientRect().top);
+				}
+			}
+
+			s.addEventListener("mousemove", mouseHandler);
+			s.addEventListener("mousedown", mouseHandler);
+			s.addEventListener("mouseleave", mouseHandler);
+
+			s.addEventListener("touchmove", touchHandler);
+			s.addEventListener("touchstart", touchHandler);
+			s.addEventListener("touchend", touchHandler);
+		}
+
+		game.update();
+	</script>
+</html>
