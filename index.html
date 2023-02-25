@@ -2,7 +2,7 @@
 <html lang="en-us">
 	<head>
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scroll=no">
+		<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 		<title>rgb1k! neo</title>
 		<style type="text/css">
 			* {
@@ -103,6 +103,7 @@
 
 			#game-state {
 				flex-grow: 0 !important;
+				user-select:none;
 			}
 
 			#game-state > h1 {
@@ -298,21 +299,28 @@
 		for (const s of document.querySelectorAll(".slider")) {
 			const [v] = s.children;
 
-			const update = y => {
-				s.fracValue = Math.max(Math.min(1 - y / s.offsetHeight, 1.0), 0.0);
-					s.value = s.fracValue * 0xff | 0;
+			s.fracValue ||= 0.5;
 
-					const color = {
-						"r": "#f00",
-						"g": "#0f0",
-						"b": "#00f"
-					}[s.id];
-					const channel = "rgb".indexOf(s.id);
-					const percent = s.fracValue * 100;
+			const update = (y, touch = false) => {
+				if (touch) {
+					s.fracValue = -y / s.offsetHeight + s.startFracValue;
+				} else {
+					s.fracValue = 1 - y / s.offsetHeight;
+				}
+				s.fracValue = Math.max(Math.min(s.fracValue, 1.0), 0.0)
+				s.value = s.fracValue * 0xff | 0;
 
-					s.style.background = `linear-gradient(to top, ${color} ${percent}%, #fff ${percent}%)`;
-					game.userColor[channel] = v.innerText = s.value;
-					game.update();
+				const color = {
+					"r": "#f00",
+					"g": "#0f0",
+					"b": "#00f"
+				}[s.id];
+				const channel = "rgb".indexOf(s.id);
+				const percent = s.fracValue * 100;
+
+				s.style.background = `linear-gradient(to top, ${color} ${percent}%, #fff ${percent}%)`;
+				game.userColor[channel] = v.innerText = s.value;
+				game.update();
 			}
 
 			const mouseHandler = e => {
@@ -320,8 +328,8 @@
 			}
 
 			const touchHandler = e => {
-				if (e.touches[0]) {
-					update(e.touches[0].clientY - s.getBoundingClientRect().top);
+				if (e.targetTouches[0]) {
+					update(e.targetTouches[0].pageY - s.startPageY, true);
 				}
 			}
 
@@ -329,9 +337,15 @@
 			s.addEventListener("mousedown", mouseHandler);
 			s.addEventListener("mouseleave", mouseHandler);
 
-			s.addEventListener("touchmove", touchHandler);
-			s.addEventListener("touchstart", touchHandler);
-			s.addEventListener("touchend", touchHandler);
+			s.addEventListener("touchstart", e => {
+				s.startPageY = e.targetTouches[0].pageY;
+				s.startFracValue = s.fracValue;
+
+				s.addEventListener("touchmove", touchHandler);
+			});
+			s.addEventListener("touchend", e => {
+				s.removeEventListener("touchmove", touchHandler);
+			});
 		}
 
 		game.update();
