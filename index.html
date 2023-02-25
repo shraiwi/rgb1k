@@ -232,6 +232,15 @@
 				]
 			},
 
+			reset() {
+				this.guessColor = this.randColor();
+
+				this.guessNumber = 0;
+				this.roundScores = [];
+
+				this.prevGuessColor = null;
+			},
+
 			submit() {
 				this.prevGuessColor = [...this.userColor];
 
@@ -243,29 +252,38 @@
 
 				roundScore = Math.pow(1 - roundScore, 3.0);
 
-				console.log(roundScore);
+				this.roundScores = [...this.roundScores || [], roundScore];
 
-				this.totalRoundScore += roundScore;
+				this.getScore(true)
 
-				if (++this.guessNumber == 3) { // game over
-
+				if (this.roundScores.length == 3) { // game over
 					const prevScoreDiv = document.createElement("div");
-					prevScoreDiv.innerText = this.eScore.innerText;
+					prevScoreDiv.innerText = (this.getScore() * 100 | 0) + "%";
 					prevScoreDiv.style.background = `linear-gradient(to right, rgb(${this.prevGuessColor}) 50%, rgb(${this.guessColor}) 50%)`;
 
 					this.ePrevScores.prepend(prevScoreDiv);
 
-					this.guessColor = this.randColor();
-
-					this.guessNumber = 0;
-					this.totalRoundScore = 0;
-
-					this.prevGuessColor = null;
+					this.reset();
 
 					console.log("game over!");
 				}
 
 				this.update();
+			},
+
+			getScore(log = false) {
+				const roundWeights = [0.1, 0.3, 0.6];
+
+				let totalScore = 0;
+				let maxScore = 0;
+				for (let i = 0; i < this.roundScores.length; i++) {
+					maxScore += roundWeights[i];
+					totalScore += this.roundScores[i] * roundWeights[i];
+				}
+
+				if (log) console.log(totalScore, maxScore);
+
+				return totalScore / maxScore;
 			},
 
 			update() {
@@ -284,7 +302,7 @@
 
 				this.eGuessNumber.innerText = `${this.guessNumber + 1}/3`;
 
-				const percentScore = this.totalRoundScore * 100 / this.guessNumber;
+				const percentScore = this.getScore() * 100;
 
 				this.eScore.innerText = `${percentScore | 0}%`;
 				this.eScore.style.background = `hsl(${percentScore | 0} 90% 50%)`;
@@ -348,6 +366,7 @@
 			});
 		}
 
+		game.reset();
 		game.update();
 	</script>
 </html>
