@@ -9,6 +9,7 @@
 				font-family: Arial;
 				border-radius: 1em;
 				transition-duration: 200ms;
+				box-sizing: border-box;
 			}
 
 			body {
@@ -21,6 +22,8 @@
 					translate: -2em 0;
 					margin-left: -2em;
 				}
+
+				50% { opacity: 0; }
 
 				100% {
 					opacity: 1;
@@ -135,6 +138,11 @@
 				padding: 0.2em;
 			}
 
+			#prev-scores>div#high-score {
+				order: -1;
+				outline: 4pt solid gold;
+			}
+
 			div #r { 
 				background: linear-gradient(to top, #f00 50%, #fff 50%);
 				border: 4pt solid #f00; 
@@ -188,6 +196,7 @@
 					<div id="score">0%</div>
 				</h1>
 				<h1 id="prev-scores">
+					<div id="high-score">??%</div>
 				</h1>
 			</div>
 			<div style="flex-grow: 2;">
@@ -223,6 +232,32 @@
 			eGuessColor: document.getElementById("guess-color"),
 			eScore: document.getElementById("score"),
 			ePrevScores: document.getElementById("prev-scores"),
+			eHighScore: document.getElementById("high-score"),
+
+			// from https://gist.github.com/mjackson/5311256
+			rgbToHsv(r, g, b) {
+				r /= 255, g /= 255, b /= 255;
+
+				var max = Math.max(r, g, b), min = Math.min(r, g, b);
+				var h, s, v = max;
+
+				var d = max - min;
+				s = max == 0 ? 0 : d / max;
+
+				if (max == min) {
+					h = 0; // achromatic
+				} else {
+					switch (max) {
+						case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+						case g: h = (b - r) / d + 2; break;
+						case b: h = (r - g) / d + 4; break;
+					}
+
+					h /= 6;
+				}
+
+				return [ h, s, v ];
+			},
 
 			randColor() {
 				return [
@@ -244,22 +279,30 @@
 			submit() {
 				this.prevGuessColor = [...this.userColor];
 
-				let roundScore = 0;
+				let roundScore = this.getRoundScore();
 
-				for (let i = 0; i < 3; i++) {
-					roundScore += Math.abs(this.userColor[i] - this.guessColor[i]) / 765;
-				}
+				this.roundScores.push(roundScore);
 
-				roundScore = Math.pow(1 - roundScore, 3.0);
-
-				this.roundScores = [...this.roundScores || [], roundScore];
-
-				this.getScore(true)
+				let totalScore = this.getScore(true);
 
 				if (this.roundScores.length == 3) { // game over
 					const prevScoreDiv = document.createElement("div");
+
 					prevScoreDiv.innerText = (this.getScore() * 100 | 0) + "%";
 					prevScoreDiv.style.background = `linear-gradient(to right, rgb(${this.prevGuessColor}) 50%, rgb(${this.guessColor}) 50%)`;
+
+					if (totalScore > +(localStorage.highScore || 0)) { // new high score
+						this.eHighScore.id = "";
+
+						prevScoreDiv.id = "high-score";
+						prevScoreDiv.onmousedown = this.eHighScore.onmousedown;
+						this.eHighScore.onmousedown = undefined;
+
+						this.eHighScore = prevScoreDiv;
+
+						localStorage.highScore = totalScore;
+						localStorage.highScoreGradient = prevScoreDiv.style.background;
+					}
 
 					this.ePrevScores.prepend(prevScoreDiv);
 
@@ -281,9 +324,19 @@
 					totalScore += this.roundScores[i] * roundWeights[i];
 				}
 
-				if (log) console.log(totalScore, maxScore);
+				if (log) console.log(this.roundScores, totalScore, maxScore);
 
 				return totalScore / maxScore;
+			},
+
+			getRoundScore() {
+				let roundScore = 0;
+
+				for (let i = 0; i < 3; i++) {
+					roundScore += Math.abs(this.userColor[i] - this.guessColor[i]) / 765;
+				}
+
+				return Math.pow(1 - roundScore, 3.0);
 			},
 
 			update() {
@@ -300,7 +353,7 @@
 				this.eGuessColor.style.background = rgbGuessColor || "none";
 				this.eGuessColor.style.borderColor = rgbGuessColor || "#ccc";
 
-				this.eGuessNumber.innerText = `${this.guessNumber + 1}/3`;
+				this.eGuessNumber.innerText = `${this.roundScores.length + 1}/3`;
 
 				const percentScore = this.getScore() * 100;
 
@@ -309,7 +362,17 @@
 			},
 		};
 
-		game.guessColor = game.randColor();
+		game.eHighScore.innerText = localStorage.highScore ? ((+localStorage.highScore * 100 | 0)+"%") : "??";
+		game.eHighScore.style.background = localStorage.highScoreGradient || "black";
+		game.eHighScore.onmousedown = e => {
+			if (confirm("Clear high score?")) {
+				localStorage.highScore = "";
+				localStorage.highScoreGradient = "";
+
+				game.eHighScore.innerText = "??";
+				game.eHighScore.style.background = "black";
+			}
+		}
 		game.eGuessColor.addEventListener("click", _ => {
 			game.submit();
 		});
